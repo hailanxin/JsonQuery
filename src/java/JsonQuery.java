@@ -1,14 +1,9 @@
-package com.che.hadoop.logclean.utils;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-/*
- * @author:张松伟
- * Json解析类
- */
+
 public class JsonQuery implements Iterable<String>{
     private Map<String, String> m = new HashMap<String, String>();
     private String s;
