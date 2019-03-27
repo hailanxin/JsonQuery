@@ -1,10 +1,14 @@
-package java;
+package com.che.hadoop.logclean.utils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+/*
+ * @author:张松伟
+ * Json解析类
+ */
 public class JsonQuery implements Iterable<String>{
     private Map<String, String> m = new HashMap<String, String>();
     private String s;
@@ -72,36 +76,41 @@ public class JsonQuery implements Iterable<String>{
      * @return Map<String, String>
      */
     private Map<String, String> toM(String json) {
-        Integer start = 1;
-        Integer end = start;
-        while (start < json.length()) {
-            end = IndexOf(json, start);
-            if(end == json.length()){ end = json.length() - 1; }
-            String kv = json.substring(start, end);
-            Integer colon = IndexOf(kv, 0, ':');
-            String key = dropDoubleQuotation(kv.substring(0, colon));
-            String value = dropDoubleQuotation(kv.substring(colon + 1));
-            m.put(key, value);
-            start = end + 1;
+        if(json.length() > 2) {
+            Integer start = 1;
+            Integer end = start;
+            while (start < json.length()) {
+                end = IndexOf(json, start);
+                if (end == json.length()) {
+                    end = json.length() - 1;
+                }
+                String kv = json.substring(start, end);
+                Integer colon = IndexOf(kv, 0, ':');
+                String key = dropDoubleQuotation(kv.substring(0, colon));
+                String value = dropDoubleQuotation(kv.substring(colon + 1));
+                m.put(key, value);
+                start = end + 1;
+            }
         }
-
         return m;
 
     }
 
     private List<String> toL(String json) {
-        Integer start = 1;
-        Integer end = start;
-        while (start < json.length()) {
-            end = IndexOf(json, start);
-            if(end == json.length()){ end = json.length() - 1; }
-            String element = json.substring(start, end);
-            if (element.startsWith("\"")){
-                element = dropDoubleQuotation(element);
-                l.add(element);
-            }else
-                l.add(element.trim());
-            start = end + 1;
+        if(json.length() > 2){
+            Integer start = 1;
+            Integer end = start;
+            while (start < json.length()) {
+                end = IndexOf(json, start);
+                if(end == json.length()){ end = json.length() - 1; }
+                String element = json.substring(start, end);
+                if (element.startsWith("\"")){
+                    element = dropDoubleQuotation(element);
+                    l.add(element);
+                }else
+                    l.add(element.trim());
+                start = end + 1;
+            }
         }
         return l;
     }
@@ -126,11 +135,11 @@ public class JsonQuery implements Iterable<String>{
             if (c == split && brace == 0 && bracket == 0 && double_quotation_marks % 2 == 0) {
                 break;
             }
-            if (c == '{') brace ++;
-            if (c == '[') bracket ++;
-            if (c == '"' && (start == 0 || json.charAt(start - 1) != '\\')) double_quotation_marks ++;
-            if (c == '}') brace --;
-            if (c == ']') bracket --;
+            else if (c == '{' && double_quotation_marks % 2 == 0) brace ++;
+            else if (c == '[' && double_quotation_marks % 2 == 0) bracket ++;
+            else if (c == '"' && (start == 0 || json.charAt(start - 1) != '\\')) double_quotation_marks ++;
+            else if (c == '}' && double_quotation_marks % 2 == 0) brace --;
+            else if (c == ']' && double_quotation_marks % 2 == 0) bracket --;
 
         }
         return start;
