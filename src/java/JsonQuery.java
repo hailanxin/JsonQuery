@@ -1,9 +1,11 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+package com.che.hadoop.recommend.utils;
 
+import java.util.*;
+
+/*
+ * @author:张松伟
+ * Json解析类
+ */
 public class JsonQuery implements Iterable<String>{
     private Map<String, String> m = new HashMap<String, String>();
     private String s;
@@ -42,6 +44,9 @@ public class JsonQuery implements Iterable<String>{
     public Integer mi(String key) {
         return Integer.valueOf(ms(key));
     }
+    public Double md(String key) {
+        return Double.valueOf(ms(key));
+    }
 
     public String ls(Integer index) {
         return l.get(index);
@@ -52,6 +57,9 @@ public class JsonQuery implements Iterable<String>{
     }
     public Integer li(Integer index) {
         return Integer.valueOf(ls(index));
+    }
+    public Double ld(Integer index) {
+        return Double.valueOf(ls(index));
     }
     public void put(String key, String value){
         m.put(key, value);
@@ -132,7 +140,7 @@ public class JsonQuery implements Iterable<String>{
             }
             else if (c == '{' && double_quotation_marks % 2 == 0) brace ++;
             else if (c == '[' && double_quotation_marks % 2 == 0) bracket ++;
-            else if (c == '"' && (start == 0 || json.charAt(start - 1) != '\\')) double_quotation_marks ++;
+            else if (c == '"' && (start == 0 || (json.charAt(start - 1) != '\\' || (json.charAt(start - 1) == '\\' && json.charAt(start - 2) == '\\')))) double_quotation_marks ++;
             else if (c == '}' && double_quotation_marks % 2 == 0) brace --;
             else if (c == ']' && double_quotation_marks % 2 == 0) bracket --;
 
