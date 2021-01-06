@@ -1,7 +1,13 @@
 package com.che.hadoop.logclean.utils;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.UnhandledException;
+import org.apache.commons.lang.exception.NestableRuntimeException;
+import org.apache.commons.lang.text.StrBuilder;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,7 +38,7 @@ public class JsonQuery implements Iterable<String>{
      */
     public JsonQuery(String json, Boolean escape){
         if(escape){
-            s = StringEscapeUtils.unescapeJava(json.trim());
+            s = unescapeJava(json.trim());
         }else{
             s = json.trim();
         }
@@ -182,8 +188,8 @@ public class JsonQuery implements Iterable<String>{
     }
 
     public static void main(String[] args) {
-        String s = " {\"employees\": [{\"firstName\": \"Bill\" ,\"lastName\": \"Gates\"},{\"firstName\": \"George\",\"lastName\": \"Bush\"}]}";
-        JsonQuery j = new JsonQuery(s);
+        String s = " {\"employees\": [{\"firstName\": \"Bil\\l\" ,\"lastName\": \"Gates\"},{\"firstName\": \"George\",\"lastName\": \"Bush\"}]}";
+        JsonQuery j = new JsonQuery(s, true);
         System.out.println(j.m_size());
         JsonQuery e = j.m("employees");
         System.out.println(e.l(0).m("firstName"));
@@ -197,5 +203,91 @@ public class JsonQuery implements Iterable<String>{
      */
     public Iterator<String> iterator() {
         return this.l.iterator();
+    }
+
+    public static String unescapeJava(String str) {
+        if (str == null) {
+            return null;
+        } else {
+            try {
+                StringWriter writer = new StringWriter(str.length());
+                unescapeJava(writer, str);
+                return writer.toString();
+            } catch (IOException var2) {
+                throw new UnhandledException(var2);
+            }
+        }
+    }
+
+    public static void unescapeJava(Writer out, String str) throws IOException {
+        if (out == null) {
+            throw new IllegalArgumentException("The Writer must not be null");
+        } else if (str != null) {
+            int sz = str.length();
+            StrBuilder unicode = new StrBuilder(4);
+            boolean hadSlash = false;
+            boolean inUnicode = false;
+
+            for(int i = 0; i < sz; ++i) {
+                char ch = str.charAt(i);
+                if (inUnicode) {
+                    unicode.append(ch);
+                    if (unicode.length() == 4) {
+                        try {
+                            int value = Integer.parseInt(unicode.toString(), 16);
+                            out.write((char)value);
+                            unicode.setLength(0);
+                            inUnicode = false;
+                            hadSlash = false;
+                        } catch (NumberFormatException var9) {
+                            throw new NestableRuntimeException("Unable to parse unicode value: " + unicode, var9);
+                        }
+                    }
+                } else if (hadSlash) {
+                    hadSlash = false;
+                    switch(ch) {
+                        case '"':
+                            out.write(34);
+                            break;
+                        case '\'':
+                            out.write(39);
+                            break;
+                        case '\\':
+                            out.write(92);
+                            break;
+                        case 'b':
+                            out.write(8);
+                            break;
+                        case 'f':
+                            out.write(12);
+                            break;
+                        case 'n':
+                            out.write(10);
+                            break;
+                        case 'r':
+                            out.write(13);
+                            break;
+                        case 't':
+                            out.write(9);
+                            break;
+                        case 'u':
+                            inUnicode = true;
+                            break;
+                        default:
+                            out.write(92);
+                            out.write(ch);
+                    }
+                } else if (ch == '\\') {
+                    hadSlash = true;
+                } else {
+                    out.write(ch);
+                }
+            }
+
+            if (hadSlash) {
+                out.write(92);
+            }
+
+        }
     }
 }
