@@ -19,23 +19,23 @@ public class JsonQuery implements Iterable<String>{
 
     /**
      *
-     * @param s 需要解析的字符串
+     * @param json 需要解析的字符串
      */
-    public JsonQuery(String s) {
-        this(s, false);
+    public JsonQuery(String json) {
+        this(json, false);
     }
 
     /**
      *
-     * @param s 需要解析的字符串
+     * @param json 需要解析的字符串
      * @param escape 是否转义
      */
-    public JsonQuery(String s, Boolean escape){
+    public JsonQuery(String json, Boolean escape){
         if(escape){
-            s = StringEscapeUtils.unescapeJava(s.trim());
+            s = StringEscapeUtils.unescapeJava(json.trim());
+        }else{
+            s = json.trim();
         }
-        s = s.trim();
-        this.s = s;
         if (s.startsWith("{")) {
             m = toM(s);
         }else if (s.startsWith("[")) {
