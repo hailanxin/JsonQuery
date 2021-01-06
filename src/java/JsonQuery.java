@@ -1,9 +1,15 @@
-package com.che.hadoop.recommend.utils;
+package com.che.hadoop.logclean.utils;
 
-import java.util.*;
+import org.apache.commons.lang.StringEscapeUtils;
 
-/*
- * @author:张松伟
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author 张松伟
  * Json解析类
  */
 public class JsonQuery implements Iterable<String>{
@@ -11,7 +17,23 @@ public class JsonQuery implements Iterable<String>{
     private String s;
     private List<String> l = new ArrayList<String>();
 
+    /**
+     *
+     * @param s 需要解析的字符串
+     */
     public JsonQuery(String s) {
+        this(s, false);
+    }
+
+    /**
+     *
+     * @param s 需要解析的字符串
+     * @param escape 是否转义
+     */
+    public JsonQuery(String s, Boolean escape){
+        if(escape){
+            s = StringEscapeUtils.unescapeJava(s.trim());
+        }
         s = s.trim();
         this.s = s;
         if (s.startsWith("{")) {
@@ -47,13 +69,11 @@ public class JsonQuery implements Iterable<String>{
     public Double md(String key) {
         return Double.valueOf(ms(key));
     }
-
     public String ls(Integer index) {
         return l.get(index);
     }
     public JsonQuery l(Integer index) {
-        JsonQuery j = new JsonQuery(ls(index));
-        return j;
+        return new JsonQuery(ls(index));
     }
     public Integer li(Integer index) {
         return Integer.valueOf(ls(index));
@@ -75,13 +95,13 @@ public class JsonQuery implements Iterable<String>{
     }
     /**
      * 注意ToM前需要保证{位置为0,这样代码里start等一才正确
-     * @param json
-     * @return Map<String, String>
+     * @param json json字符串
+     * @return Map<String, String> 解析后的格式
      */
     private Map<String, String> toM(String json) {
         if(json.length() > 2) {
-            Integer start = 1;
-            Integer end = start;
+            int start = 1;
+            Integer end;
             while (start < json.length()) {
                 end = IndexOf(json, start);
                 if (end == json.length()) {
@@ -101,8 +121,8 @@ public class JsonQuery implements Iterable<String>{
 
     private List<String> toL(String json) {
         if(json.length() > 2){
-            Integer start = 1;
-            Integer end = start;
+            int start = 1;
+            Integer end;
             while (start < json.length()) {
                 end = IndexOf(json, start);
                 if(end == json.length()){ end = json.length() - 1; }
@@ -110,8 +130,9 @@ public class JsonQuery implements Iterable<String>{
                 if (element.startsWith("\"")){
                     element = dropDoubleQuotation(element);
                     l.add(element);
-                }else
+                }else {
                     l.add(element.trim());
+                }
                 start = end + 1;
             }
         }
@@ -120,8 +141,9 @@ public class JsonQuery implements Iterable<String>{
 
     private String dropDoubleQuotation(String key) {
         key = key.trim();
-        if (!key.startsWith("\""))
+        if (!key.startsWith("\"")) {
             return key;
+        }
         return key.substring(1, key.length() - 1);
     }
 
@@ -129,20 +151,26 @@ public class JsonQuery implements Iterable<String>{
         return IndexOf(json, start, ',');
     }
     private Integer IndexOf(String json, Integer start, char split) {
-        Integer brace = 0;
-        Integer bracket = 0;
-        Integer double_quotation_marks = 0;
+        int brace = 0;
+        int bracket = 0;
+        int double_quotation_marks = 0;
         Integer length = json.length();
         for (; start < length; start++) {
             char c = json.charAt(start);
             if (c == split && brace == 0 && bracket == 0 && double_quotation_marks % 2 == 0) {
                 break;
             }
-            else if (c == '{' && double_quotation_marks % 2 == 0) brace ++;
-            else if (c == '[' && double_quotation_marks % 2 == 0) bracket ++;
-            else if (c == '"' && (start == 0 || (json.charAt(start - 1) != '\\' || (json.charAt(start - 1) == '\\' && json.charAt(start - 2) == '\\')))) double_quotation_marks ++;
-            else if (c == '}' && double_quotation_marks % 2 == 0) brace --;
-            else if (c == ']' && double_quotation_marks % 2 == 0) bracket --;
+            else if (c == '{' && double_quotation_marks % 2 == 0) {
+                brace ++;
+            } else if (c == '[' && double_quotation_marks % 2 == 0) {
+                bracket ++;
+            } else if (c == '"' && (start == 0 || (json.charAt(start - 1) != '\\' || (json.charAt(start - 1) == '\\' && json.charAt(start - 2) == '\\')))) {
+                double_quotation_marks ++;
+            } else if (c == '}' && double_quotation_marks % 2 == 0) {
+                brace --;
+            } else if (c == ']' && double_quotation_marks % 2 == 0) {
+                bracket --;
+            }
 
         }
         return start;
@@ -164,6 +192,9 @@ public class JsonQuery implements Iterable<String>{
         }
     }
 
+    /**
+     * @return 迭代器
+     */
     public Iterator<String> iterator() {
         return this.l.iterator();
     }
